@@ -14,6 +14,10 @@ module BluemediaPayments
           attribute _attribute
         end
       end
+
+      def xml_parser
+        Nori.new(convert_tags_to: lambda { |tag| tag.snakecase.to_sym })
+      end
     end
   end
 end

@@ -7,6 +7,22 @@ module BluemediaPayments
       :nip, :regon, :edg, :krs, :kind,
       :service, :person, :beneficial_owner
 
+    attr_accessor :logger, :logging_enabled, :soap_response, :response
+
+    class Response < OpenStruct
+      def initialize(hash=nil)
+        register_response = hash.delete(:register_response)
+        super(hash.merge(register_response))
+      end
+    end
+
+    validates *(attributes.keys - %w( edg krs beneficial_owner )), presence: true
+    validate do
+      unless service.valid?(:company_create)
+        service.errors.full_messages.map { |message| errors.add(:service, "service: #{message}") }
+      end
+    end
+
     LONG_INT_MAXIMUM = 2**32
     WSDL = 'http://paybmapi-accept.blue.pl/api/ws/service?wsdl'
     TRADE_VALUES = %w( DELICATESSEN HOME_AND_GARDEN CHILDREN CONSUMER_ELECTRONICS HOBBY COMPUTERS BOOKS_AND_MULTIMEDIA
@@ -17,6 +33,7 @@ module BluemediaPayments
     )
 
     def create
+      return false unless valid?
       _service = {
         name: name,
         service_url: service.url,
@@ -49,21 +66,33 @@ module BluemediaPayments
         activity_kind: kind,
         is_beneficial_owner: beneficial_owner.present?.to_s.upcase
       }
-      time = Time.now
+      time = Time.now # TODO: use time_offset when receiving HEADER_MESSAGE_TIME_OUTDATED ?
       header = {
-        platform_id: ENV['PLATFORM_ID'],
-        message_time: time,
+        platform_id: service.platform_id,
+        message_time: time.strftime("%Y-%m-%dT%H:%M:%S"),
         request_id: (time.to_f * 1000).to_i % LONG_INT_MAXIMUM,
-        hash: URI.escape(hash(company))
       }
-      client = Savon.client(wsdl:BluemediaPayments::Company::WSDL, log_level: :debug, logger: Logger.new($stdout), log:true)
-      response = client.call(:register_company, message: { header:header, company: company })
-      binding.pry
+      header[:hash] = hash(header)
+      key_converter = method(:savon_key_converter).to_proc
+
+      _logger = logger || Logger.new('/dev/null')
+
+      client = Savon.client(wsdl:BluemediaPayments::Company::WSDL, log_level: :debug, logger: _logger, log: logging_enabled, convert_request_keys_to: key_converter)
+      self.soap_response = client.call(:register_company, message: { Header:header, Company: company })
+      self.response = Response.new(self.soap_response.body[:register_company_resp])
     end
 
-    # funkcja(wartości_pola_1_komunikatu + "|” + wartości_pola_2_komunikatu + "|” + ... + "|” + wartości_pola_n_komunikatu + "|” + klucz_współdzielony);
-    def hash(company)
-      Digest::SHA256.digest(company.keys.join('|') + "|" + ENV['SHARED_KEY'])
+    SAVON_SPECIAL_KEYS = {
+      url_itn: 'UrlITN',
+      settlement_nrb: 'SettlementNRB',
+      is_beneficial_owner: 'isBeneficialOwner'
+    }
+    def savon_key_converter(key)
+      BluemediaPayments::Company::SAVON_SPECIAL_KEYS[key.to_sym] || Gyoku::XMLKey.create(key.to_sym, {key_converter: :camelcase})
+    end
+
+    def hash(header)
+      Digest::SHA256.hexdigest(header.values.join('') + service.soap_shared_key.to_s)
     end
   end
 end
