@@ -9,6 +9,7 @@ module BluemediaPayments
 
     attr_accessor :logger, :logging_enabled, :soap_response, :response
 
+    class SoapError < StandardError; end
     class Response < OpenStruct
       def initialize(hash=nil)
         register_response = hash.delete(:register_response)
@@ -66,7 +67,7 @@ module BluemediaPayments
         activity_kind: kind,
         is_beneficial_owner: beneficial_owner.present?.to_s.upcase
       }
-      time = Time.now # TODO: use time_offset when receiving HEADER_MESSAGE_TIME_OUTDATED ?
+      time = Time.now - service.time_offset # use time_offset when receiving HEADER_MESSAGE_TIME_OUTDATED
       header = {
         platform_id: service.platform_id,
         message_time: time.strftime("%Y-%m-%dT%H:%M:%S"),
@@ -79,7 +80,7 @@ module BluemediaPayments
 
       client = Savon.client(wsdl:BluemediaPayments::Company::WSDL, log_level: :debug, logger: _logger, log: logging_enabled, convert_request_keys_to: key_converter)
       self.soap_response = client.call(:register_company, message: { Header:header, Company: company })
-      self.response = Response.new(self.soap_response.body[:register_company_resp])
+      handle_response
     end
 
     SAVON_SPECIAL_KEYS = {
@@ -94,5 +95,20 @@ module BluemediaPayments
     def hash(header)
       Digest::SHA256.hexdigest(header.values.join('') + service.soap_shared_key.to_s)
     end
+
+    def handle_response
+      soap_result = self.soap_response.body[:register_company_resp]
+      if soap_result[:result]  == 'ERROR'
+        if soap_result[:error_status] == 'COMPANY_NIP_NOT_UNIQUE'
+          errors.add(:nip, :taken)
+        else
+          raise SoapError.new(soap_result[:error_status])
+        end
+        false
+      else
+        self.response = Response.new(soap_result)
+      end
+    end
+
   end
 end

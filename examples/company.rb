@@ -13,7 +13,10 @@ service_params = {
   url: "http://#{ENV['EXTERNAL_WEB']}",
   notification_url: "http://#{ENV['EXTERNAL_WEB']}/itn",
   return_url: "http://#{ENV['EXTERNAL_WEB']}/payment_complete",
-  commission_model: 1
+  commission_model: 1,
+  platform_id: ENV['PLATFORM_ID'],
+  soap_shared_key: ENV['SOAP_SHARED_KEY'],
+  time_offset: 4.minutes
 }
 person_params = {
   email: 'jan.kowalski@example.pl',
@@ -30,9 +33,8 @@ valid_params = { id:1, name: 'Firma testowa', profile: 'OTHER', bank_account: '9
 
 company = BluemediaPayments::Company.new(valid_params)
 company.logging_enabled = true
-company.platform_id = ENV['PLATFORM_ID']
-company.shared_key = ENV['SOAP_SHARED_KEY']
 result = company.create
+p company.errors.full_messages unless result
 p result
 # puts
 # puts CGI.unescapeHTML(result[:register_response][:activation_link])
