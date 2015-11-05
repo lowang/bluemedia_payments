@@ -6,7 +6,7 @@ module BluemediaPayments
     SERVICE_VALIDATION_SCOPE = :verification
 
     attribute :merchant_id, type: Integer
-    attribute :order_id, type: Integer
+    attribute :order_id, type: String
     attribute :transaction_id, type: Integer
     attribute :transaction_date, type: Date
     attribute :amount, type: BigDecimal
@@ -82,6 +82,11 @@ module BluemediaPayments
   <docHash>#{confirmation_hash_signature}</docHash>
 </confirmationList>
       EOS
+    end
+
+    def service_id
+      order_id_parts = order_id.split('_')
+      order_id_parts[0]
     end
   end
 end
