@@ -8,7 +8,7 @@ describe BluemediaPayments::Verification do
       <merchantID>1</merchantID>
       <transactions>
         <transaction>
-          <orderID>11</orderID>
+          <orderID>11_4234</orderID>
           <transID>91</transID>
           <transDate>20010101</transDate>
           <amount>11.11</amount>
@@ -19,7 +19,7 @@ describe BluemediaPayments::Verification do
           <param>CustomerAddress=SmFuIEtvbHdhc2tp|CustomerNRB=92874710181271009158695384|VerificationStatus=POSITIVE</param>
         </transaction>
       </transactions>
-      <docHash>a79f36481e4676b1d4dc078e1d61d2f2</docHash>
+      <docHash>f3878b3704db65449e128c0565dc263e</docHash>
     </transactionList>
     EOS
   }
@@ -35,7 +35,7 @@ describe BluemediaPayments::Verification do
 
     it { is_expected.to be_kind_of(BluemediaPayments::Verification) }
 
-    it { expect(subject.order_id).to eq(11) }
+    it { expect(subject.order_id).to eq('11_4234') }
     it { expect(subject.transaction_id).to eq(91) }
     it { expect(subject.transaction_date).to eq(Date.parse "2001-01-01") }
     it { expect(subject.amount).to eq(BigDecimal.new('11.11')) }
@@ -47,21 +47,22 @@ describe BluemediaPayments::Verification do
     it { expect(subject.properties[:customer_address]).to eq('Jan Kolwaski') }
     it { expect(subject.properties[:customer_nrb]).to eq('92874710181271009158695384') }
     it { expect(subject.properties[:verification_status]).to eq('POSITIVE') }
-    it { expect(subject.hash_signature).to eq('a79f36481e4676b1d4dc078e1d61d2f2') }
+    it { expect(subject.hash_signature).to eq('f3878b3704db65449e128c0565dc263e') }
+    it { expect(subject.service_id).to eq('11') }
     it { expect(subject.hash_signature_verified?).to be_truthy }
     it { expect(subject.valid?).to be_truthy, subject.errors.full_messages.join("\n") }
   end
 
   describe 'respond to itn' do
     let(:expected_confirmation_status) { 'CONFIRMED'}
-    let(:expected_hash) { '81c41447633b7ace04c220a1d826ba18'}
+    let(:expected_hash) { '2e898b19152af74f2b7f52b1f4a3b6ea'}
     let(:xml_confirmation) { <<-EOS }
 <?xml version="1.0" encoding="UTF-8"?>
 <confirmationList>
   <merchantID>1</merchantID>
   <transactionsConfirmations>
     <transactionConfirmed>
-      <orderID>11</orderID>
+      <orderID>11_4234</orderID>
       <confirmation>#{expected_confirmation_status}</confirmation>
     </transactionConfirmed>
   </transactionsConfirmations>
@@ -77,7 +78,7 @@ EOS
 
     describe 'without confirmation' do
       let(:expected_confirmation_status) { 'NOTCONFIRMED'}
-      let(:expected_hash) { '66b8917c3e263fc57a14e9ec38d3fe49'}
+      let(:expected_hash) { 'f91e0c0f0ce56271ec4905af6dc968dd'}
       describe 'by declining confirmation' do
         it { is_expected.to eq(xml_confirmation) }
         it { expect(verification_itn.valid?).to be_truthy }
