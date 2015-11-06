@@ -7,7 +7,7 @@ module BluemediaPayments
 
     attribute :merchant_id, type: Integer
     attribute :order_id, type: String
-    attribute :transaction_id, type: Integer
+    attribute :transaction_id, type: String
     attribute :transaction_date, type: Date
     attribute :amount, type: BigDecimal
     attribute :currency
@@ -61,6 +61,7 @@ module BluemediaPayments
       verify_hash_signture = Digest::MD5.hexdigest(verify_hash_signture)
       logger.debug "COMPUTED HASH: #{verify_hash_signture}" if logger?
       logger.debug "SUPPLIED HASH: #{hash_signature}, CHECK?: #{hash_signature == verify_hash_signture}" if logger?
+      p verify_hash_signture
       hash_signature == verify_hash_signture
     end
 
