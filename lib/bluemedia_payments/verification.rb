@@ -55,7 +55,7 @@ module BluemediaPayments
 
     def hash_signature_verified?
       verify_hash_signture = [ service.merchant_id, order_id, transaction_id, transaction_date.strftime('%Y%m%d'),
-        amount, currency, payway_id, status_date.strftime('%Y%m%d%H%M%S'), status, raw_properties ]
+        '%.2f' % amount, currency, payway_id, status_date.strftime('%Y%m%d%H%M%S'), status, raw_properties ]
       verify_hash_signture = verify_hash_signture.join('') + '' + service.verification_shared_key.to_s
       logger.debug "COMPUTED HASH KEYS: #{verify_hash_signture}" if logger?
       verify_hash_signture = Digest::MD5.hexdigest(verify_hash_signture)
