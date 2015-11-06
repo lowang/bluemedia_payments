@@ -9,7 +9,7 @@ describe BluemediaPayments::Verification do
       <transactions>
         <transaction>
           <orderID>11_4234</orderID>
-          <transID>91</transID>
+          <transID>9F1LQWXK</transID>
           <transDate>20010101</transDate>
           <amount>11.11</amount>
           <currency>PLN</currency>
@@ -19,7 +19,7 @@ describe BluemediaPayments::Verification do
           <param>CustomerAddress=SmFuIEtvbHdhc2tp|CustomerNRB=92874710181271009158695384|VerificationStatus=POSITIVE</param>
         </transaction>
       </transactions>
-      <docHash>f3878b3704db65449e128c0565dc263e</docHash>
+      <docHash>355ec265ee8e3321b7aa32c6e63ad1f4</docHash>
     </transactionList>
     EOS
   }
@@ -36,7 +36,7 @@ describe BluemediaPayments::Verification do
     it { is_expected.to be_kind_of(BluemediaPayments::Verification) }
 
     it { expect(subject.order_id).to eq('11_4234') }
-    it { expect(subject.transaction_id).to eq(91) }
+    it { expect(subject.transaction_id).to eq('9F1LQWXK') }
     it { expect(subject.transaction_date).to eq(Date.parse "2001-01-01") }
     it { expect(subject.amount).to eq(BigDecimal.new('11.11')) }
     it { expect(subject.currency).to eq('PLN') }
@@ -47,7 +47,7 @@ describe BluemediaPayments::Verification do
     it { expect(subject.properties[:customer_address]).to eq('Jan Kolwaski') }
     it { expect(subject.properties[:customer_nrb]).to eq('92874710181271009158695384') }
     it { expect(subject.properties[:verification_status]).to eq('POSITIVE') }
-    it { expect(subject.hash_signature).to eq('f3878b3704db65449e128c0565dc263e') }
+    it { expect(subject.hash_signature).to eq('355ec265ee8e3321b7aa32c6e63ad1f4') }
     it { expect(subject.service_id).to eq('11') }
     it { expect(subject.hash_signature_verified?).to be_truthy }
     it { expect(subject.valid?).to be_truthy, subject.errors.full_messages.join("\n") }
