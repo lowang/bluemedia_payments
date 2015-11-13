@@ -56,6 +56,10 @@ Wait for verification ITN to arrive. Make sure that you've got *VerificationStat
 
 If you've got VerificationStatus: POSITIVE - now you can enable this service to perform payments.
 
+#### Join created Service with received Verification ITN
+
+In response after `company.create` you will receive hash with key `service_id`. In verification INT object you can get it from method `verification.service_id`
+
 #### Payment
 
 Use `SERVICE_ID` and `SERVICE_KEY` obtained from Create new Service step and place them in `GEM_ROOT/.env` file.
