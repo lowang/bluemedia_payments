@@ -116,4 +116,13 @@ EOS
       end
     end
   end
+
+  describe 'redirect to payment form' do
+    describe 'payment_form_url' do
+      let(:order) { BluemediaPayments::Order.new(valid_attributes) }
+      subject { order.payment_form_url }
+      it { is_expected.to eq("http://pay-accept.bm.pl/merchant?Amount=10.20&Currency=PLN&CustomerEmail=przemyslaw.wroblewski%2Btest1%40nokaut.pl&Description=zakup+punkt%C3%B3w+reklamowych&GatewayID=0&Hash=ce74479a16962cc354b7c273dcfced62fa944e11fede29eebd0d8a664465714e&LinkValidityTime=2015-10-15+19%3A45%3A54&OrderID=1&ServiceID=354&ValidityTime=2015-10-15+18%3A45%3A54") }
+    end
+  end
+
 end

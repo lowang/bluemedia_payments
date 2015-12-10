@@ -30,9 +30,22 @@ module BluemediaPayments
 
     def create
       return unless valid?
-      self.redirect_to_payment_form = RestClient.post service.gateway_url, serializable_hash, 'BmHeader' => 'pay-bm'
+      self.redirect_to_payment_form = CGI.unescapeHTML(RestClient.post service.gateway_url, serializable_hash, 'BmHeader' => 'pay-bm')
     rescue RestClient::NotAcceptable => exception
       parse_error(exception)
+    end
+
+    def payment_form_url
+      self.gateway_id = 0 # display all payment gateways
+      return unless valid?
+      self.customer_ip = nil
+      self.title = nil
+      payment_options = serializable_hash
+      payment_options.delete('CustomerIP')
+      payment_options.delete('Title')
+      url = URI.parse(service.gateway_url)
+      url.query = payment_options.to_param
+      url.to_s
     end
 
     def parse_error(restclient_exception)

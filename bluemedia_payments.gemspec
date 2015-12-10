@@ -9,9 +9,9 @@ Gem::Specification.new do |spec|
   spec.authors       = ["Przemyslaw Wroblewski"]
   spec.email         = ["przemyslaw.wroblewski@nokaut.pl"]
 
-  spec.summary       = %q{TODO: Write a short summary, because Rubygems requires one.}
-  spec.description   = %q{TODO: Write a longer description or delete this line.}
-  spec.homepage      = "TODO: Put your gem's website or public repo URL here."
+  spec.summary       = %q{The BluemediaPayments Ruby gem provides access to the Bluemedia.pl payment and merchant API.}
+  spec.description   = %q{supports background orders (your website -> bank website), handle order notifications - ITN's, create new POS services via merchant API}
+  spec.homepage      = "https://github.com/lowang/bluemedia_payments"
   spec.license       = "MIT"
 
   # Prevent pushing this gem to RubyGems.org by setting 'allowed_push_host', or
