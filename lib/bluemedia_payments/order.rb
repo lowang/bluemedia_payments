@@ -26,11 +26,14 @@ module BluemediaPayments
       end
     end
 
-    attr_accessor :service, :redirect_to_payment_form
+    attr_accessor :service, :redirect_to_payment_form, :transaction_id
 
     def create
       return unless valid?
-      self.redirect_to_payment_form = CGI.unescapeHTML(RestClient.post service.gateway_url, serializable_hash, 'BmHeader' => 'pay-bm')
+      self.redirect_to_payment_form = "".tap do |redirect_to_payment_form|
+        redirect_to_payment_form << CGI.unescapeHTML(RestClient.post service.gateway_url, serializable_hash, 'BmHeader' => 'pay-bm')
+        parse_response(redirect_to_payment_form)
+      end
     rescue RestClient::NotAcceptable => exception
       parse_error(exception)
     end
@@ -56,6 +59,13 @@ module BluemediaPayments
       exception.status_code = parsed_xml[:error][:status_code].to_i
       exception.name = parsed_xml[:error][:name]
       raise exception
+    end
+
+    def parse_response(response_body)
+      match_data = response_body.match(/<input type="hidden" name="transaction" value="(\w+)">/)
+      if match_data[1]
+        self.transaction_id = match_data[1]
+      end
     end
 
     def serialized_amount

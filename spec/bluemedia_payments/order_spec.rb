@@ -4,8 +4,8 @@ describe BluemediaPayments::Order do
   let(:service_params) do { service_id: 354, service_key: '12'*16, gateway_url: 'http://pay-accept.bm.pl/merchant' } end
   let(:service) { BluemediaPayments::Service.new(service_params) }
   let(:valid_attributes) do { order_id: 1, amount: 10.2, title: 'zakup',
-    description: 'zakup punktów reklamowych',
-    customer_email: 'przemyslaw.wroblewski+test1@nokaut.pl',
+    description: 'zakup punktow reklamowych',
+    customer_email: 'przemyslaw.wroblewski@nokaut.pl',
     customer_ip: '81.210.106.10', gateway_id: 106, service: service  }
   end
   before do
@@ -39,7 +39,7 @@ describe BluemediaPayments::Order do
       expect(BluemediaPayments::Order::HASH_SIGNATURE_KEYS_ORDER).to eq(%i( service_id order_id serialized_amount description gateway_id currency customer_email customer_ip title validity_time link_validity_time))
     end
     it 'calculates hash' do
-      expect(subject.hash_signature).to eq('d8ef58c0d243ed84801cc527877bf10fd3e02f80df2869f91b8a5a4f196d6478')
+      expect(subject.hash_signature).to eq('1e65a1fbdfde3f35d76ecc9f6e4bc666f745e0dbf74a2d0dddfac6dfeda55c56')
     end
   end
 
@@ -61,6 +61,7 @@ EOS
         expect(subject).to be_kind_of String
         expect(subject).to start_with('<!-- PAYWAY FORM BEGIN -->')
         expect(subject).to end_with("<!-- PAYWAY FORM END -->\n")
+        expect(order.transaction_id).to eq('123254')
       end
     end
 
@@ -121,7 +122,7 @@ EOS
     describe 'payment_form_url' do
       let(:order) { BluemediaPayments::Order.new(valid_attributes) }
       subject { order.payment_form_url }
-      it { is_expected.to eq("http://pay-accept.bm.pl/merchant?Amount=10.20&Currency=PLN&CustomerEmail=przemyslaw.wroblewski%2Btest1%40nokaut.pl&Description=zakup+punkt%C3%B3w+reklamowych&GatewayID=0&Hash=ce74479a16962cc354b7c273dcfced62fa944e11fede29eebd0d8a664465714e&LinkValidityTime=2015-10-15+19%3A45%3A54&OrderID=1&ServiceID=354&ValidityTime=2015-10-15+18%3A45%3A54") }
+      it { is_expected.to eq("http://pay-accept.bm.pl/merchant?Amount=10.20&Currency=PLN&CustomerEmail=przemyslaw.wroblewski%40nokaut.pl&Description=zakup+punktow+reklamowych&GatewayID=0&Hash=c56b395fc5309ab9f23c20a213e7f0ce8631f624b2c461863bad85050f8e3556&LinkValidityTime=2015-10-15+19%3A45%3A54&OrderID=1&ServiceID=354&ValidityTime=2015-10-15+18%3A45%3A54") }
     end
   end
 
