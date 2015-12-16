@@ -22,6 +22,8 @@ module BluemediaPayments
 
     validates *attributes.keys, presence: true
 
+    HASH_SIGNATURE_KEYS_ORDER = %w( merchant_id order_id transaction_id transaction_date amount currency payway_id status_date status raw_properties verification_shared_key )
+    
     class << self
       # BlueMedia: despite array form, ITN describe single transaction
       def from_itn(itn_xml, service)
@@ -54,14 +56,11 @@ module BluemediaPayments
     end
 
     def hash_signature_verified?
-      verify_hash_signture = [ service.merchant_id, order_id, transaction_id, transaction_date.strftime('%Y%m%d'),
-        '%.2f' % amount, currency, payway_id, status_date.strftime('%Y%m%d%H%M%S'), status, raw_properties ]
-      verify_hash_signture = verify_hash_signture.join('') + '' + service.verification_shared_key.to_s
-      logger.debug "COMPUTED HASH KEYS: #{verify_hash_signture}" if logger?
-      verify_hash_signture = Digest::MD5.hexdigest(verify_hash_signture)
-      logger.debug "COMPUTED HASH: #{verify_hash_signture}" if logger?
-      logger.debug "SUPPLIED HASH: #{hash_signature}, CHECK?: #{hash_signature == verify_hash_signture}" if logger?
-      hash_signature == verify_hash_signture
+      hash = BluemediaPayments::Hash.new(logger: logger, service: service, method: :md5, keys_order: HASH_SIGNATURE_KEYS_ORDER,
+              params: attributes.merge({status_date: status_date.strftime('%Y%m%d%H%M%S'),
+                transaction_date: transaction_date.strftime('%Y%m%d'), amount: '%.2f' % amount,
+                raw_properties: raw_properties, verification_shared_key: service.verification_shared_key}.stringify_keys))
+      hash_signature == hash.hash
     end
 
     def xml_response

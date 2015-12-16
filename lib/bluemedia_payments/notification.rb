@@ -21,6 +21,8 @@ module BluemediaPayments
 
     validates *attributes.keys, presence: true
 
+    HASH_SIGNATURE_KEYS_ORDER = %w( service_id order_id remote_id amount currency gateway_id payment_date payment_status payment_status_details )
+
     class << self
       # BlueMedia: despite array form ITN describe single transaction
       def from_itn(itn_xml, service)
@@ -36,14 +38,9 @@ module BluemediaPayments
     end
 
     def hash_signature_verified?
-      verify_hash_signture = [ service.service_id, order_id, remote_id,
-        amount, currency, gateway_id, payment_date.strftime('%Y%m%d%H%M%S'), payment_status, payment_status_details ]
-      verify_hash_signture = (verify_hash_signture << service.service_key.to_s).join("|")
-      logger.debug "COMPUTED HASH KEYS: #{verify_hash_signture}" if logger?
-      verify_hash_signture = Digest::SHA256.hexdigest(verify_hash_signture)
-      logger.debug "COMPUTED HASH: #{verify_hash_signture}" if logger?
-      logger.debug "SUPPLIED HASH: #{hash_signature}, CHECK?: #{hash_signature == verify_hash_signture}" if logger?
-      hash_signature == verify_hash_signture
+      hash = BluemediaPayments::Hash.new(logger: logger, service: service, separator: '|', keys_order: HASH_SIGNATURE_KEYS_ORDER,
+        params: attributes.merge('payment_date' => payment_date.strftime('%Y%m%d%H%M%S')))
+      hash_signature == hash.hash
     end
 
     def xml_response
