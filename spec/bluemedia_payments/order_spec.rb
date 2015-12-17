@@ -15,9 +15,9 @@ describe BluemediaPayments::Order do
   describe 'incomplete order' do
     subject { BluemediaPayments::Order.new(order_id: 1, amount: 10.2, service: service) }
     it 'serializes an order' do
-      expect(subject.serializable_hash).to eq({"OrderID"=>1, "Amount"=>"10.20", "Description"=>nil, "Currency"=>"PLN",
+      expect(subject.serializable_hash(BluemediaPayments::Order::HASH_SIGNATURE_KEYS_BACKGROUND_ORDER)).to eq({"OrderID"=>1, "Amount"=>"10.20", "Description"=>nil, "Currency"=>"PLN",
         "CustomerEmail"=>nil, "CustomerIP"=>nil, "Title"=>nil, "ServiceID"=>"354", "GatewayID"=>nil,
-        "Hash" => "b0959ef0dd5d9a91ff6e8b8d93bd28af030d2682f01b000c6a6dd834cdd92f5f",
+        "Hash" => "455874670a28f01e6fd6870030e64e6d35a455cd88d199145e413d6cd547f61c",
         "LinkValidityTime" => "2015-10-15 19:45:54", "ValidityTime" => "2015-10-15 18:45:54"
       })
     end
@@ -27,19 +27,22 @@ describe BluemediaPayments::Order do
   end
 
   describe '#serializable_hash' do
-    subject { BluemediaPayments::Order.new(valid_attributes).serializable_hash }
+    subject { BluemediaPayments::Order.new(valid_attributes).serializable_hash(BluemediaPayments::Order::HASH_SIGNATURE_KEYS_BACKGROUND_ORDER) }
     it "uses valid BlueMedia params" do
-      expect(subject.keys).to eq(%w( OrderID GatewayID Description CustomerEmail CustomerIP Title Amount Currency ServiceID ValidityTime LinkValidityTime Hash ))
+      expect(subject.keys).to eq(%w( ServiceID OrderID Amount Description GatewayID Currency CustomerEmail CustomerIP Title ValidityTime LinkValidityTime Hash ))
     end
   end
 
   describe '#hash_signature' do
     subject { BluemediaPayments::Order.new(valid_attributes) }
-    it 'preserves order on attributes' do
-      expect(BluemediaPayments::Order::HASH_SIGNATURE_KEYS_ORDER).to eq(%i( service_id order_id serialized_amount description gateway_id currency customer_email customer_ip title validity_time link_validity_time))
+    it 'preserves background order on attributes' do
+      expect(BluemediaPayments::Order::HASH_SIGNATURE_KEYS_BACKGROUND_ORDER).to eq(%i( service_id order_id amount description gateway_id currency customer_email customer_ip title validity_time link_validity_time))
+    end
+    it 'preserves fronted order on attributes' do
+      expect(BluemediaPayments::Order::HASH_SIGNATURE_KEYS_FRONTEND_ORDER).to eq(%i( service_id order_id amount description gateway_id currency customer_email))
     end
     it 'calculates hash' do
-      expect(subject.hash_signature).to eq('1e65a1fbdfde3f35d76ecc9f6e4bc666f745e0dbf74a2d0dddfac6dfeda55c56')
+      expect(subject.hash_signature(BluemediaPayments::Order::HASH_SIGNATURE_KEYS_BACKGROUND_ORDER)).to eq('1e65a1fbdfde3f35d76ecc9f6e4bc666f745e0dbf74a2d0dddfac6dfeda55c56')
     end
   end
 
@@ -57,7 +60,7 @@ EOS
       let(:order) { BluemediaPayments::Order.new(valid_attributes) }
       subject { order.create }
       it 'creates an order' do
-        expect(RestClient).to receive(:post).with("http://pay-accept.bm.pl/merchant", order.serializable_hash, {"BmHeader"=>"pay-bm"}).and_return(response_success)
+        expect(RestClient).to receive(:post).with("http://pay-accept.bm.pl/merchant", order.serializable_hash(BluemediaPayments::Order::HASH_SIGNATURE_KEYS_BACKGROUND_ORDER), {"BmHeader"=>"pay-bm"}).and_return(response_success)
         expect(subject).to be_kind_of String
         expect(subject).to start_with('<!-- PAYWAY FORM BEGIN -->')
         expect(subject).to end_with("<!-- PAYWAY FORM END -->\n")
@@ -74,7 +77,7 @@ EOS
       end
       let(:order) { BluemediaPayments::Order.new(valid_attributes) }
       before do
-        expect(RestClient).to receive(:post).with("http://pay-accept.bm.pl/merchant", order.serializable_hash, {"BmHeader"=>"pay-bm"}).and_raise(response_error)
+        expect(RestClient).to receive(:post).with("http://pay-accept.bm.pl/merchant", order.serializable_hash(BluemediaPayments::Order::HASH_SIGNATURE_KEYS_BACKGROUND_ORDER), {"BmHeader"=>"pay-bm"}).and_raise(response_error)
       end
       subject { order.create }
 
@@ -122,7 +125,7 @@ EOS
     describe 'payment_form_url' do
       let(:order) { BluemediaPayments::Order.new(valid_attributes) }
       subject { order.payment_form_url }
-      it { is_expected.to eq("http://pay-accept.bm.pl/merchant?Amount=10.20&Currency=PLN&CustomerEmail=przemyslaw.wroblewski%40nokaut.pl&Description=zakup+punktow+reklamowych&GatewayID=0&Hash=c56b395fc5309ab9f23c20a213e7f0ce8631f624b2c461863bad85050f8e3556&LinkValidityTime=2015-10-15+19%3A45%3A54&OrderID=1&ServiceID=354&ValidityTime=2015-10-15+18%3A45%3A54") }
+      it { is_expected.to eq("http://pay-accept.bm.pl/merchant?Amount=10.20&Currency=PLN&CustomerEmail=przemyslaw.wroblewski%40nokaut.pl&Description=zakup+punktow+reklamowych&GatewayID=0&Hash=5cbd160be8b1721ba8ab7337e9170334bb4ea7a7928cb3ebcca12ca4a3bc843a&OrderID=1&ServiceID=354") }
     end
   end
 
