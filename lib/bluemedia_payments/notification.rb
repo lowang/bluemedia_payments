@@ -21,7 +21,7 @@ module BluemediaPayments
 
     validates *attributes.keys, presence: true
 
-    HASH_SIGNATURE_KEYS_ORDER = %w( service_id order_id remote_id amount currency gateway_id payment_date payment_status payment_status_details )
+    HASH_SIGNATURE_KEYS_ORDER = %w( service_id order_id remote_id amount currency gateway_id payment_date payment_status payment_status_details service_key )
 
     class << self
       # BlueMedia: despite array form ITN describe single transaction
@@ -38,8 +38,11 @@ module BluemediaPayments
     end
 
     def hash_signature_verified?
-      hash = BluemediaPayments::Hash.new(logger: logger, service: service, separator: '|', keys_order: HASH_SIGNATURE_KEYS_ORDER,
-        params: attributes.merge('payment_date' => payment_date.strftime('%Y%m%d%H%M%S')))
+      attributes_to_hash = attributes.dup
+      attributes_to_hash.delete('hash_signature')
+      attributes_to_hash['service_key'] = service.service_key
+      raise BluemediaPayments::Hash::IncorrectKeyOrder if attributes_to_hash.keys != HASH_SIGNATURE_KEYS_ORDER
+      hash = BluemediaPayments::Hash.new(logger: logger, separator: '|', params: attributes_to_hash)
       hash_signature == hash.hash
     end
 

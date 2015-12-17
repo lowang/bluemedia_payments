@@ -1,9 +1,10 @@
 module BluemediaPayments
   class Hash
+    class IncorrectKeyOrder < StandardError; end
     include Base
 
-    attr_writer :hash, :keys_order, :method
-    attr_accessor :params, :separator, :service
+    attr_writer :hash, :method
+    attr_accessor :params, :separator
 
     def self.from_params(params)
       new(params:params)
@@ -21,15 +22,19 @@ module BluemediaPayments
     private
 
     def keys_order
-      @keys_order || params.try(:keys)
+      params.try(:keys)
     end
 
     def hash_signature_values
       hash_signature_values = keys_order.map do |attribute|
         value = params[attribute]
-        value.presence
+        case value.presence
+          when DateTime then value.strftime('%Y%m%d%H%M%S')
+          when Date then value.strftime('%Y%m%d')
+          when BigDecimal then '%.2f' % value
+          else value.presence
+        end
       end.compact
-      hash_signature_values << service.service_key if service && service.service_key.present?
       hash_signature_values.join(separator.to_s)
     end
 
