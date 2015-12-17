@@ -2,6 +2,7 @@ module BluemediaPayments
   class Hash
     class IncorrectKeyOrder < StandardError; end
     include Base
+    include Utils
 
     attr_writer :hash, :method
     attr_accessor :params, :separator
@@ -27,13 +28,7 @@ module BluemediaPayments
 
     def hash_signature_values
       hash_signature_values = keys_order.map do |attribute|
-        value = params[attribute]
-        case value.presence
-          when DateTime then value.strftime('%Y%m%d%H%M%S')
-          when Date then value.strftime('%Y%m%d')
-          when BigDecimal then '%.2f' % value
-          else value.presence
-        end
+        cast_value(params[attribute])
       end.compact
       hash_signature_values.join(separator.to_s)
     end

@@ -15,9 +15,8 @@ describe BluemediaPayments::Hash do
     end
     let(:separator) { '|' }
     let(:hash_model) do
-      BluemediaPayments::Hash.from_params(itn_params).tap do |hash|
+      BluemediaPayments::Hash.from_params(itn_params.merge(service_key: 'ser')).tap do |hash|
         hash.separator = separator
-        hash.service = OpenStruct.new(service_key: 'ser')
         hash.logger = Logger.new(STDOUT)
       end
     end
@@ -38,8 +37,7 @@ describe BluemediaPayments::Hash do
       param: 'CustomerAddress=SmFuIEtvbHdhc2tp|CustomerNRB=92874710181271009158695384|VerificationStatus=POSITIVE' }
     end
     let(:hash_model) do
-      BluemediaPayments::Hash.from_params(itn_params).tap do |hash|
-        hash.service = OpenStruct.new(service_key: 'ver')
+      BluemediaPayments::Hash.from_params(itn_params.merge(service_key: 'ver')).tap do |hash|
         hash.logger = Logger.new(STDOUT)
         hash.method = :md5
       end

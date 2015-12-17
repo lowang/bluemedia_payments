@@ -6,6 +6,7 @@ require 'restclient'
 require 'savon'
 
 require 'bluemedia_payments/version'
+require 'bluemedia_payments/utils'
 require 'bluemedia_payments/base'
 require 'bluemedia_payments/company'
 require 'bluemedia_payments/hash'
