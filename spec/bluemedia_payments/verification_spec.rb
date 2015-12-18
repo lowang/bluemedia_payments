@@ -32,7 +32,7 @@ describe BluemediaPayments::Verification do
 
   describe 'parse itn' do
     subject { verification_itn }
-
+    #before { BluemediaPayments::Verification.logger = Logger.new(STDOUT)}
     it { is_expected.to be_kind_of(BluemediaPayments::Verification) }
 
     it { expect(subject.order_id).to eq('11_4234') }

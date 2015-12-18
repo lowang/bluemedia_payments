@@ -18,7 +18,7 @@ describe BluemediaPayments::Notification do
                 <paymentStatusDetails>AUTHORIZED</paymentStatusDetails>
             </transaction>
         </transactions>
-        <hash>c4b851da23e64cc058bb2c0fa4e3fa6119a6fa2cb12f946ec5c3e16e5fdd7298</hash>
+        <hash>964d3ee2aa2515f8d3ebe550f9779869c01c6d5264429268a55432ca3a7f49ac</hash>
     </transactionList>
     EOS
   }
@@ -31,7 +31,7 @@ describe BluemediaPayments::Notification do
   describe 'parse itn' do
     describe 'parse itn' do
       subject { itn }
-      # before { BluemediaPayments::Notification.logger = Logger.new(STDOUT)}
+      #before { BluemediaPayments::Notification.logger = Logger.new(STDOUT)}
       it { is_expected.to be_kind_of(BluemediaPayments::Notification) }
 
       it { expect(subject.order_id).to eq(1) }
@@ -42,7 +42,7 @@ describe BluemediaPayments::Notification do
       it { expect(subject.payment_date).to eq(DateTime.parse '2015-10-09 10:36:46') }
       it { expect(subject.payment_status).to eq('SUCCESS') }
       it { expect(subject.payment_status_details).to eq('AUTHORIZED') }
-      it { expect(subject.hash_signature).to eq('c4b851da23e64cc058bb2c0fa4e3fa6119a6fa2cb12f946ec5c3e16e5fdd7298') }
+      it { expect(subject.hash_signature).to eq('964d3ee2aa2515f8d3ebe550f9779869c01c6d5264429268a55432ca3a7f49ac') }
       it { expect(subject.hash_signature_verified?).to be_truthy }
       it { expect(subject.valid?).to be_truthy, subject.errors.full_messages.join("\n") }
     end

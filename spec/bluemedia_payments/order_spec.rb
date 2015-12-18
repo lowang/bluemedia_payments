@@ -13,10 +13,11 @@ describe BluemediaPayments::Order do
   end
 
   describe 'incomplete order' do
+    #before { BluemediaPayments::Order.logger = Logger.new(STDOUT)}
     subject { BluemediaPayments::Order.new(order_id: 1, amount: 10.2, service: service) }
     it 'serializes an order' do
       expect(subject.serializable_hash(BluemediaPayments::Order::HASH_SIGNATURE_KEYS_BACKGROUND_ORDER)).to eq({"OrderID"=>1, "Amount"=>"10.20", "Description"=>nil, "Currency"=>"PLN",
-        "CustomerEmail"=>nil, "CustomerIP"=>nil, "Title"=>nil, "ServiceID"=>"354", "GatewayID"=>nil,
+        "CustomerEmail"=>nil, "CustomerIP"=>nil, "Title"=>nil, "ServiceID"=>354, "GatewayID"=>nil,
         "Hash" => "455874670a28f01e6fd6870030e64e6d35a455cd88d199145e413d6cd547f61c",
         "LinkValidityTime" => "2015-10-15 19:45:54", "ValidityTime" => "2015-10-15 18:45:54"
       })
@@ -42,7 +43,7 @@ describe BluemediaPayments::Order do
       expect(BluemediaPayments::Order::HASH_SIGNATURE_KEYS_FRONTEND_ORDER).to eq(%i( service_id order_id amount description gateway_id currency customer_email))
     end
     it 'calculates hash' do
-      expect(subject.hash_signature(BluemediaPayments::Order::HASH_SIGNATURE_KEYS_BACKGROUND_ORDER)).to eq('1e65a1fbdfde3f35d76ecc9f6e4bc666f745e0dbf74a2d0dddfac6dfeda55c56')
+      expect(subject.serializable_hash(BluemediaPayments::Order::HASH_SIGNATURE_KEYS_BACKGROUND_ORDER)['Hash']).to eq('1e65a1fbdfde3f35d76ecc9f6e4bc666f745e0dbf74a2d0dddfac6dfeda55c56')
     end
   end
 

@@ -70,14 +70,6 @@ module BluemediaPayments
       end
     end
 
-    def serialized_amount
-      "%.02f" % BigDecimal(amount.to_s)
-    end
-
-    def serialized_service_id
-      self.service.service_id.to_s
-    end
-
     def order_time
       @order_time ||= Time.now
     end
@@ -90,30 +82,15 @@ module BluemediaPayments
       (order_time. + 1.hour).to_s(:db)
     end
 
-    def hash_signature_values(hash_params)
-      hash_signature_values = hash_params.map do |attribute|
-        serialized_attribute_method = "serialized_#{attribute}".to_sym
-        respond_to?(serialized_attribute_method) ? send(serialized_attribute_method) : send(attribute)
-      end.compact
-      [hash_signature_values << self.service.service_key].join('|')
-    end
-
-    def hash_signature(hash_params)
-      logger && logger.debug("COMPUTED HASH KEY: #{hash_signature_values(hash_params).inspect}")
-      hash_signature = Digest::SHA256.hexdigest(hash_signature_values(hash_params))
-      logger && logger.debug("COMPUTED HASH: #{hash_signature}")
-      hash_signature
-    end
-
     def serializable_hash(hash_params)
       params = {}
       hash_params.each do |attribute|
-        serialized_attribute_method = "serialized_#{attribute}".to_sym
-        value = respond_to?(serialized_attribute_method) ? send(serialized_attribute_method) : send(attribute)
         serialized_key = SPECIAL_KEYS[attribute.to_sym] || attribute.to_s.camelize
-        params[serialized_key] = value
+        params[serialized_key] = BluemediaPayments::Utils.cast_value(send(attribute))
       end
-      params['Hash'] = hash_signature(hash_params)
+      params['service_key'] = service.service_key
+      params['Hash'] = BluemediaPayments::Hash.new(logger: logger, separator: '|', params: params).hash
+      params.delete('service_key')
       params
     end
   end
